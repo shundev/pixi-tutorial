@@ -1,13 +1,37 @@
 import * as PIXI from "pixi.js"
+import "./index.styl"
 
-var width = 600;
-var height = 400;
+import cat_asset from "./images/cat.png"
+
+const width = 600;
+const height = 400;
+
+const options = {
+    antialias: true,
+    backgroundColor: 0xFFFFFF,
+    width: width,
+    height: height
+}
 
 // ステージを作る
-const app = new PIXI.Application({ backgroundColor: 0xFFFFFF })
+const app = new PIXI.Application(options)
+
+app.renderer.view.style.position = "absolute";
+app.renderer.view.style.display = "block";
+app.renderer.autoResize = true;
+app.renderer.resize(window.innerWidth, window.innerHeight);
 
 // レンダラーのviewをDOMに追加する
-document.getElementById("pixiview").appendChild(app.view);
+document.body.appendChild(app.view);
+
+PIXI.loader.add(cat_asset).load(setup)
+
+function setup() {
+    let cat = new PIXI.Sprite(
+        PIXI.loader.resources[cat_asset].texture
+    )
+    app.stage.addChild(cat)
+}
 
 // テキストオブジェクトを作る
 var word = "Hello World!"
