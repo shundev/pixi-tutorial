@@ -74,6 +74,10 @@ function setup() {
     explorer = new PIXI.Sprite(PIXI.utils.TextureCache["explorer.png"])
     explorer.x = 68
     explorer.y = app.stage.height / 2 - explorer.height / 2
+    explorer.interactive = true
+    explorer.on("click", function () {
+        alert("Explorer clicked!")
+    })
     app.stage.addChild(explorer)
 
     treasure = new PIXI.Sprite(PIXI.utils.TextureCache["treasure.png"])
@@ -95,17 +99,16 @@ function setup() {
         app.stage.addChild(blob)
     }
 
-    // 次のアニメーションフレームでanimate()を呼び出してもらう
-    requestAnimationFrame(animate)
+    app.ticker.add(delta => gameLoop(delta))
 }
 
 // アニメーション関数を定義する
-function animate () {
-    requestAnimationFrame(animate) // 次の描画タイミングでanimateを呼び出す
+function gameLoop (delta) {
     textobj.rotation += 0.01 // テキストを回転する
     cat.rotation += 0.01
     rocket.rotation += 0.01
-    app.render()   // 描画する
+
+    // explorer.x += 1 + delta
 }
 
 function randomInt(min, max) {
