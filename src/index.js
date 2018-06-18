@@ -1,22 +1,17 @@
 import * as PIXI from "pixi.js"
 import "./index.styl"
 
-import cat_asset from "./images/cat.png"
-import tileset_asset from "./images/tileset.png"
-
-const width = 512;
-const height = 512;
+const width = 600;
+const height = 600;
 
 const options = {
     antialias: true,
-    backgroundColor: 0xFFFFFF,
-    width: width,
-    height: height
+    backgroundColor: 0xDDDDDD
 }
 
 // ステージを作る
-const app = new PIXI.Application(options)
-
+const app = new PIXI.Application(width, height, options)
+const graphics = new PIXI.Graphics()
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
@@ -25,92 +20,82 @@ app.renderer.resize(window.innerWidth, window.innerHeight);
 // レンダラーのviewをDOMに追加する
 document.body.appendChild(app.view);
 
-PIXI.loader.add([cat_asset, tileset_asset, "./images/treasureHunter.json"]).load(setup)
+const lineParam = {
+    tan: 0.1
+}
 
-let cat
-let rocket
-let textobj
-let dungeon
-let explorer
-let treasure
-let door
+const origin = {
+    x: 300, y: 300
+}
+
+function f(x) {
+    return 0.1 * (x - 100)**2 - 100
+}
+
+function c(p) {
+    return {
+        x: p.x + origin.x,
+        y: height - p.y - origin.y
+    }
+}
 
 function setup() {
-    cat = new PIXI.Sprite(
-        PIXI.loader.resources[cat_asset].texture
-    )
-    cat.position.x = width / 4
-    cat.position.y = height / 2
-    cat.anchor.x = 0.5
-    cat.anchor.y = 0.5
-    app.stage.addChild(cat)
-
-    const texture = PIXI.utils.TextureCache[tileset_asset]
-    const rectangle = new PIXI.Rectangle(192, 128, 64, 64)
-    texture.frame = rectangle
-    rocket = new PIXI.Sprite(texture)
-    rocket.x = 32
-    rocket.y = 32
-    rocket.anchor.x = 0.5
-    rocket.anchor.y = 0.5
-    app.stage.addChild(rocket)
-
-    // テキストオブジェクトを作る
-    var word = "Hello World!"
-    var style = { fontFamily: "Arial", fontSize: 60, fontWeight:'bold', fill: 0x000000 }
-    textobj = new PIXI.Text(word, style)
-    textobj.position.x = width / 2
-    textobj.position.y = height / 2
-    textobj.anchor.x = 0.5
-    textobj.anchor.y = 0.5
-
-    // テキストオブジェクトをステージに乗せる
-    app.stage.addChild(textobj);
-
-    let dungeonTex = PIXI.utils.TextureCache["dungeon.png"]
-    dungeon = new PIXI.Sprite(dungeonTex)
-    app.stage.addChild(dungeon)
-
-    explorer = new PIXI.Sprite(PIXI.utils.TextureCache["explorer.png"])
-    explorer.x = 68
-    explorer.y = app.stage.height / 2 - explorer.height / 2
-    explorer.interactive = true
-    explorer.on("click", function () {
-        alert("Explorer clicked!")
-    })
-    app.stage.addChild(explorer)
-
-    treasure = new PIXI.Sprite(PIXI.utils.TextureCache["treasure.png"])
-    treasure.x = app.stage.width - 68
-    treasure.y = app.stage.height / 2 - treasure.height / 2
-    app.stage.addChild(treasure)
-
-    door = new PIXI.Sprite(PIXI.utils.TextureCache["door.png"])
-    door.position.set(32, 0)
-    app.stage.addChild(door)
-
-    let numberOfBlobs = 6, spacing = 48, xOffset =  150
-    for (let i = 0; i < numberOfBlobs; i++) {
-        let blob = new PIXI.Sprite(PIXI.utils.TextureCache["blob.png"])
-        let x = spacing * i + xOffset
-        let y = randomInt(0, app.stage.height - blob.height)
-        blob.x = x
-        blob.y = y
-        app.stage.addChild(blob)
-    }
-
+    drawGraph()
+    app.stage.addChild(graphics)
     app.ticker.add(delta => gameLoop(delta))
 }
 
+let x = 100, step = 0, flag = true
+
 // アニメーション関数を定義する
 function gameLoop (delta) {
-    textobj.rotation += 0.01 // テキストを回転する
-    cat.rotation += 0.01
-    rocket.rotation += 0.01
+    step++
+    if (step%2===0) {
+        if (flag) {
+            x++
+        } else {
+            x--
+        }
 
-    // explorer.x += 1 + delta
+        let y = f(x)
+        if (y >= 0) {
+            flag = !flag
+            return
+        }
+
+        let p = c({x:x, y:y})
+
+
+        graphics.clear()
+        drawGraph()
+        graphics.beginFill(0x000000, 0.9)
+        graphics.drawCircle(p.x, p.y, 3)
+        graphics.endFill()
+    }
+}
+
+function drawGraph() {
+    graphics.beginFill(0x222222)
+    graphics.lineStyle(1, 0x222222)
+    graphics.moveTo(0, origin.y)
+    graphics.lineTo(width, origin.y)
+    graphics.moveTo(origin.x, 0)
+    graphics.lineTo(origin.x, height)
+    graphics.endFill()
+
+    graphics.beginFill(0x000000)
+    graphics.lineStyle(2, 0x000000)
+    for (let x=-300; x<300; x++) {
+        let p1 = c({x: x-1, y: f(x-1)})
+        let p2 = c({x: x, y: f(x)})
+        graphics.moveTo(p1.x, p1.y)
+        graphics.lineTo(p2.x, p2.y)
+    }
+    graphics.endFill()
 }
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+setup()
